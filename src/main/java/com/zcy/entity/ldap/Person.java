@@ -54,5 +54,6 @@ public class Person {
     private String description;
     @Attribute(name = "displayName")
     private String displayName;
-
+    @Attribute(name = "userPassword")
+    private String userPassword;
 }
