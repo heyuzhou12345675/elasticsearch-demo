@@ -33,18 +33,18 @@ public class Product extends BaseEntity {
     private String productName;
 
     /**
-     * 分类
+     * 分类 开启ik分词器 (ik_max_word最细粒度分词)
      */
-    @Field(type = FieldType.Auto)
+    @Field(type = FieldType.Text, analyzer = "ik_max_word", store = true, searchAnalyzer = "ik_max_word")
     private String classification;
 
     @Field(type = FieldType.Long)
     private long price;
 
-    @Field(type = FieldType.Date, name = "startTime", format = DateFormat.custom, pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date startTime;
+    @Field(type = FieldType.Date, name = "startTime", format = DateFormat.date_hour_minute_second, pattern = "yyyy-MM-dd HH:mm:ss")
+    private String startTime;
 
-    @Field(type = FieldType.Date, name = "startTime", format = DateFormat.custom, pattern = "yyyy-MM-dd HH:mm:ss")
+    @Field(type = FieldType.Date, name = "endTime", format = DateFormat.custom, pattern = "yyyy-MM-dd HH:mm:ss")
     private String endTime;
 
     @Field(type = FieldType.Integer)
@@ -56,5 +56,11 @@ public class Product extends BaseEntity {
      */
     @Field(type = FieldType.Keyword, name = "deleteFlag")
     private String deleteFlag;
+
+    @Field(type = FieldType.Keyword, name = "searchTime", format = DateFormat.custom, pattern = "yyyy-MM-dd HH:mm:ss")
+    private String searchTime;
+
+    @Field(type = FieldType.Date, name = "birthday", format = DateFormat.custom, pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date birthday;
 
 }
