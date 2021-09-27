@@ -89,9 +89,8 @@ public class EsProductController {
         String startTime = product.getParams().get("startTime").toString();
         String endTime = product.getParams().get("endTime").toString();
 
-        //范围搜索不好使
         NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
-                //时间范围查询(现在确实因为分词问题，以String存时间的话，当前版本es会把时间分词，导致搜索无结果)
+                //时间范围查询(现在确实因为分词问题版本号7.7.0，以String存时间的话，当前版本es会把时间分词，导致搜索无结果)
                 //加入keyword关键字
                 .withFilter(QueryBuilders.rangeQuery("searchTime.keyword").gte(startTime).lt(endTime))
                 //文字匹配
@@ -144,7 +143,7 @@ public class EsProductController {
         if (StringUtils.isNotBlank(keyword)) {
             searchQueryBuilder = QueryBuilders.multiMatchQuery(keyword, "classification");
         }
-        //高亮 加入以后返回并没有高亮？
+
         //高亮
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         //设置高亮字段
@@ -171,14 +170,49 @@ public class EsProductController {
             System.out.println(highlightFields.get("classification"));
             hit.getContent().setClassification(highlightFields.get("classification").toString());
         }
-
-
-
         List<Product> productList = getResult(search);
         return productList;
 
     }
 
+    /**
+     * 模糊查询，根据分数返回查询结果
+     * */
+    @RequestMapping("/resultSort")
+    public List<Product> resultSort(@RequestBody Product product){
+        String startTime = product.getParams().get("startTime").toString();
+        String endTime = product.getParams().get("endTime").toString();
+
+        MultiMatchQueryBuilder searchQueryBuilder = null;
+        if (StringUtils.isNotBlank(product.getClassification())) {
+            searchQueryBuilder = QueryBuilders.multiMatchQuery(product.getClassification(), "classification");
+        }
+
+        NativeSearchQuery nativeSearchQueryBuilder = new NativeSearchQueryBuilder()
+                .withFilter(QueryBuilders.rangeQuery("searchTime.keyword").gte(startTime).lt(endTime))
+                .withQuery(searchQueryBuilder)
+                //根据权重排序
+                .withSort(SortBuilders.fieldSort("_score").order(SortOrder.DESC))
+                .build();
+
+
+        return null;
+    }
+
+    /**
+     * 需求:
+     * 1、中文搜索、英文搜索、中英混搜   如：“南京东路”，“cafe 南京东路店”
+     * 2、全拼搜索、首字母搜索、中文+全拼、中文+首字母混搜   如：“nanjingdonglu”，“njdl”，“南京donglu”，“南京dl”，“nang南东路”，“njd路”等等组合
+     * 3、简繁搜索、特殊符号过滤搜索   如：“龍馬”可通过“龙马”搜索，再比如 L.G.F可以通过lgf搜索，café可能通过cafe搜索
+     * 4、排序优先级为： 以关键字开头>包含关键字
+     *
+     * 解决方案:使用multi_field为搜索字段建立不同类型的索引，有全拼索引、首字母简写索引、Ngram索引以及IK索引，从各个角度分别击破，然后通过char-filter进行特殊符号与简繁转换。
+     * 如何创建我想要的索引？
+     * */
+    public void selectOne(){
+
+
+    }
 
     @RequestMapping("/removeProduct")
     public void removeProduct(@RequestBody Product product) {
@@ -238,3 +272,4 @@ public class EsProductController {
         return list;
     }
 }
+//醉意翩跹
