@@ -26,13 +26,13 @@ spring:
   #elasticsearch
   elasticsearch:
     rest:
-      uris: http://192.168.211.132:9200
-  # LDAP连接配置
+#      uris: http://192.168.211.132:9200
+      uris: http://10.111.4.15:9200
+
   ldap:
     urls: ldap://10.116.87.151:389
     base: dc=cctv,dc=com
     username: cn=root,dc=cctv,dc=com
     password: Etdx8Cuoxk2uWzVF
-
 mybatis:
   mapperLocations: classpath:mapper/*.xml

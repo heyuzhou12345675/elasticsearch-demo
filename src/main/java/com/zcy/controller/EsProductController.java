@@ -1,5 +1,8 @@
 package com.zcy.controller;
 
+import cn.hutool.core.date.DateUtil;
+import com.zcy.es.entity.AceLog;
+import com.zcy.es.entity.AceLogSearch;
 import com.zcy.es.entity.Product;
 import com.zcy.result.ResponseResult;
 import com.zcy.service.EsProductService;
@@ -7,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.*;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
@@ -14,6 +19,7 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -199,6 +205,8 @@ public class EsProductController {
         return null;
     }
 
+
+
     /**
      * 需求:
      * 1、中文搜索、英文搜索、中英混搜   如：“南京东路”，“cafe 南京东路店”
@@ -210,7 +218,6 @@ public class EsProductController {
      * 如何创建我想要的索引？
      * */
     public void selectOne(){
-
 
     }
 
@@ -233,6 +240,7 @@ public class EsProductController {
         }
         return list;
     }
+
 
 
     public List<Product> getData() throws ParseException {
