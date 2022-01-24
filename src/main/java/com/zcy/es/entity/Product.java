@@ -21,7 +21,7 @@ import java.util.Date;
  * 索引名称与实体类一致
  */
 @Data
-//@Document(indexName = "product")
+@Document(indexName = "product")
 public class Product extends BaseEntity {
     @Id
     private long id;

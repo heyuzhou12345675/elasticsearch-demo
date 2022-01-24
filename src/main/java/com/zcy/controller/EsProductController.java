@@ -217,9 +217,9 @@ public class EsProductController {
      * 解决方案:使用multi_field为搜索字段建立不同类型的索引，有全拼索引、首字母简写索引、Ngram索引以及IK索引，从各个角度分别击破，然后通过char-filter进行特殊符号与简繁转换。
      * 如何创建我想要的索引？
      * */
-    public void selectOne(){
-
-    }
+//    public void selectOne(){
+//
+//    }
 
     @RequestMapping("/removeProduct")
     public void removeProduct(@RequestBody Product product) {
@@ -230,6 +230,43 @@ public class EsProductController {
     @RequestMapping("/createIndex")
     public boolean createIndex() {
         return false;
+    }
+
+    @RequestMapping("/selectOne")
+    public Product selectOne(@RequestBody Product product){
+        NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
+                //文字匹配
+                .withQuery(QueryBuilders.matchQuery("id", product.getId()))
+                .build();
+        SearchHits<Product> search = elasticsearchRestTemplate.search(nativeSearchQuery, Product.class);
+        List<Product> result = getResult(search);
+        return result.get(0);
+    }
+
+
+    /**
+     * 同一条件 or查询 name = "善良" or name = "勇气"
+     * @return
+     */
+    @RequestMapping("/selectListByOr")
+    public List<Product> selectListByOr(){
+        List<String> list = new ArrayList<>();
+        list.add("善良");
+        list.add("勇气");
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        for(int i = 0; i < list.size(); i++){
+            boolQueryBuilder.should(QueryBuilders.matchQuery("productName", list.get(i)));
+        }
+        NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
+                .withFilter(boolQueryBuilder)
+                .build();
+
+        SearchHits<Product> search = elasticsearchRestTemplate.search(nativeSearchQuery, Product.class);
+        List<Product> productList = getResult(search);
+        for(Product product: productList){
+            System.out.println("搜索到了"+product.getProductName());
+        }
+        return productList;
     }
 
     public List<Product> getResult(SearchHits<Product> search) {
@@ -279,5 +316,5 @@ public class EsProductController {
         list.add(product3);
         return list;
     }
+
 }
-//醉意翩跹
