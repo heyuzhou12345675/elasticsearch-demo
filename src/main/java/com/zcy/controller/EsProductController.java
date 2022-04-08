@@ -95,20 +95,26 @@ public class EsProductController {
         String startTime = product.getParams().get("startTime").toString();
         String endTime = product.getParams().get("endTime").toString();
 
+        // 不等于
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        boolQueryBuilder.mustNot(QueryBuilders.matchQuery("productName", "心"));
+
         NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
                 //时间范围查询(现在确实因为分词问题版本号7.7.0，以String存时间的话，当前版本es会把时间分词，导致搜索无结果)
                 //加入keyword关键字
                 .withFilter(QueryBuilders.rangeQuery("searchTime.keyword").gte(startTime).lt(endTime))
                 //文字匹配
-                .withQuery(QueryBuilders.matchQuery("productName", product.getProductName()))
+//                .withQuery(QueryBuilders.matchQuery("productName", product.getProductName()))
+                // 排除不需要的数据
+                .withQuery(boolQueryBuilder)
                 //排序
                 .withSort(SortBuilders.fieldSort("id").order(SortOrder.DESC))
                 //分页
-                .withPageable(PageRequest.of(0, 2))
+                .withPageable(PageRequest.of(0, 10))
                 .build();
         System.out.println(nativeSearchQuery.getFilter());
         SearchHits<Product> search = elasticsearchRestTemplate.search(nativeSearchQuery, Product.class);
-        long totalHits = search.getTotalHits();
+        long totalHits = search.getSearchHits().size();
         System.out.println("搜索命中数" + totalHits);
         //获取查询返回的内容
         List<Product> productList = getResult(search);
@@ -261,6 +267,39 @@ public class EsProductController {
                 .withFilter(boolQueryBuilder)
                 .build();
 
+        SearchHits<Product> search = elasticsearchRestTemplate.search(nativeSearchQuery, Product.class);
+        List<Product> productList = getResult(search);
+        for(Product product: productList){
+            System.out.println("搜索到了"+product.getProductName());
+        }
+        return productList;
+    }
+
+    /**
+     * 多条件 (条件1 and 条件2) or (条件3 and 条件4）
+     * @param
+     * @return
+     */
+    @RequestMapping("/lotsOrSearch")
+    public List<Product> lotsOrSearch(){
+        //现实里应该是一个类的两个属性
+        List<String> productNameList = new ArrayList<>();
+        productNameList.add("善良");
+//        productNameList.add("勇气");
+        List<String> classificationList = new ArrayList<>();
+        classificationList.add("非卖品");
+//        classificationList.add("梦开始的地方");
+
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        for(int i = 0; i < productNameList.size(); i++){
+            boolQueryBuilder.must(QueryBuilders.termQuery("productName", productNameList.get(i)))
+                    .must(QueryBuilders.matchQuery("classification", classificationList.get(i)));
+        }
+        NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
+                .withFilter(boolQueryBuilder)
+                .build();
+
+        System.out.println(nativeSearchQuery.getQuery());
         SearchHits<Product> search = elasticsearchRestTemplate.search(nativeSearchQuery, Product.class);
         List<Product> productList = getResult(search);
         for(Product product: productList){
